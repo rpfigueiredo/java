@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import br.com.tcc.dto.AuthResponseDTO;
 import br.com.tcc.dto.UsuarioDto;
 import br.com.tcc.security.jwtConfig.JwtTokenUtil;
 import br.com.tcc.security.securityConfig.UserDetailsServiceImpl;
@@ -40,8 +41,8 @@ public class AuthenticationController {
 	private JwtTokenUtil jwtTokenUtil;
 	
 	@PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody UsuarioDto usuarioDto) {
-        Map<String, Object> responseMap = new HashMap<>();
+    public ResponseEntity<AuthResponseDTO> loginUser(@RequestBody UsuarioDto usuarioDto) {
+        AuthResponseDTO responseDTO = new AuthResponseDTO();
         HttpStatus status;
         
         try {
@@ -57,29 +58,28 @@ public class AuthenticationController {
         				.map(item -> item.getAuthority())
         				.collect(Collectors.toList());
                 
-                responseMap.put("message", "Usuário logado com sucesso");
-                responseMap.put("jwt token", token);
-                responseMap.put("roles", roles);
+                responseDTO.setTokenJwt(token);
+                responseDTO.setRoles(roles);
                 status = HttpStatus.OK;
             } else {
-                responseMap.put("message", "Credenciáis inválidas");
+                responseDTO.setMessage("Credenciáis inválidas");
                 status = HttpStatus.UNAUTHORIZED;
             }
         } catch (DisabledException e) {
-            responseMap.put("message", "Usuário bloqueado");
+            responseDTO.setMessage("Usuário bloqueado");
             status = HttpStatus.UNAUTHORIZED;
             logger.error(e);
         } catch (BadCredentialsException e) {
-            responseMap.put("message", "Credenciáis inválidas");
+            responseDTO.setMessage("Credenciáis inválidas");
             status = HttpStatus.UNAUTHORIZED;
             logger.error(e);
         } catch (Exception e) {
-            responseMap.put("message", "Erro inespesado! Contate o administrador");
+            responseDTO.setMessage("Erro inespesado! Contate o administrador");
             status = HttpStatus.INTERNAL_SERVER_ERROR;
             logger.error(e);
         }
         
-        return ResponseEntity.status(status).body(responseMap);
+        return ResponseEntity.status(status).body(responseDTO);
     }
 	
 }
